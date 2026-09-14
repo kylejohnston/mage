@@ -130,6 +130,18 @@ test_tuna_presets_run() {
   rm -rf "$fake_home"
 }
 
+test_install_script() {
+  local fake_home status
+  fake_home="$(mktemp -d)"
+  HOME="$fake_home" bash ./install.sh >/dev/null 2>&1; status=$?
+  assert_success "install.sh: exit 0" "$status"
+  [[ -L "$fake_home/.local/bin/imgopt" ]] && pass "install.sh: imgopt symlinked" || fail "install.sh: imgopt symlinked"
+  [[ -L "$fake_home/.local/bin/imgopt-wizard" ]] && pass "install.sh: imgopt-wizard symlinked" || fail "install.sh: imgopt-wizard symlinked"
+  [[ -f "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert copied" || fail "install.sh: webp-convert copied"
+  [[ -f "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 copied" || fail "install.sh: webp-resize-1600 copied"
+  rm -rf "$fake_home"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -181,6 +193,7 @@ test_multi_file_continues_on_error
 test_wizard_build_flags
 test_tuna_headers
 test_tuna_presets_run
+test_install_script
 
 echo
 if [[ "$failures" -eq 0 ]]; then

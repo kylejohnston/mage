@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,7 +51,7 @@ main() {
     [[ -n "$line" ]] && flags+=("$line")
   done < <(build_flags "$resize_value" "$webp_enabled" "$webp_mode" "$quality")
 
-  echo "Running: imgopt ${flags[*]} ${input_files[*]}"
+  echo "Running: imgopt ${flags[*]+"${flags[*]}"} ${input_files[*]+"${input_files[*]}"}"
   "$IMGOPT" "${flags[@]+"${flags[@]}"}" "${input_files[@]+"${input_files[@]}"}"
 }
 

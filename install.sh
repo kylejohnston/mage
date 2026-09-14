@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
 # Get the directory where this script lives
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

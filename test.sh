@@ -78,7 +78,8 @@ test_combined_resize_webp() {
 
 test_multi_file_continues_on_error() {
   local out status
-  out="$(./imgopt --webp "$FIXTURE" "$FIXTURE_DIR/missing.png" 2>&1)"; status=$?
+  rm -f "$FIXTURE_DIR/photo.webp"
+  out="$(./imgopt --webp "$FIXTURE_DIR/missing.png" "$FIXTURE" 2>&1)"; status=$?
   assert_failure "multi-file: nonzero exit when one file missing" "$status"
   assert_contains "multi-file: error names missing file" "$out" "no such file"
   assert_file_exists "multi-file: good file still processed" "$FIXTURE_DIR/photo.webp"
@@ -101,6 +102,27 @@ test_wizard_build_flags() {
   assert_contains "wizard flags: resize" "$out" "--resize"
   assert_line_equals "wizard flags: percent value is own line" "$out" "50%"
   [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
+}
+
+test_wizard_main_declines_both() {
+  local fake_bin out status
+  fake_bin="$(mktemp -d)"
+  cat > "$fake_bin/gum" <<'GUMSTUB'
+#!/bin/bash
+case "$1" in
+  confirm) exit 1 ;;
+  choose) echo lossy ;;
+  input) echo "" ;;
+esac
+GUMSTUB
+  chmod +x "$fake_bin/gum"
+
+  out="$(PATH="$fake_bin:$PATH" ./imgopt-wizard "$FIXTURE" 2>&1)"; status=$?
+  [[ "$out" != *"unbound variable"* ]] && pass "wizard main: no crash when declining both" || fail "wizard main: no crash when declining both ($out)"
+  assert_contains "wizard main: reaches Running line" "$out" "Running: imgopt"
+  assert_failure "wizard main: exits nonzero (nothing to do, not a crash)" "$status"
+
+  rm -rf "$fake_bin"
 }
 
 test_tuna_headers() {
@@ -197,6 +219,7 @@ test_webp_lossless_and_quality
 test_combined_resize_webp
 test_multi_file_continues_on_error
 test_wizard_build_flags
+test_wizard_main_declines_both
 test_tuna_headers
 test_tuna_presets_run
 test_install_script

@@ -80,15 +80,18 @@ test_wizard_build_flags() {
   local out
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "1600" "1" "lossy" "80")"
   assert_contains "wizard flags: resize" "$out" "--resize"
+  assert_contains "wizard flags: resize value" "$out" "1600"
   assert_contains "wizard flags: webp" "$out" "--webp"
   assert_contains "wizard flags: quality" "$out" "--quality"
+  assert_contains "wizard flags: quality value" "$out" "80"
 
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "" "1" "lossless" "")"
   assert_contains "wizard flags: lossless" "$out" "--lossless"
   [[ "$out" != *"--resize"* ]] && pass "wizard flags: no resize when unset" || fail "wizard flags: no resize when unset"
 
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "50%" "0" "lossy" "")"
-  assert_contains "wizard flags: percent resize" "$out" "--resize 50%"
+  assert_contains "wizard flags: resize" "$out" "--resize"
+  assert_contains "wizard flags: percent value" "$out" "50%"
   [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
 }
 

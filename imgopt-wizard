@@ -7,19 +7,20 @@ IMGOPT="$DIR/imgopt"
 # === flag building (pure, testable) ===
 build_flags() {
   local resize_value="$1" webp_enabled="$2" webp_mode="$3" quality="$4"
+  local -a flags=()
 
-  if [[ -n "$resize_value" ]]; then
-    printf '%s\n' "--resize $resize_value"
-  fi
+  [[ -n "$resize_value" ]] && flags+=(--resize "$resize_value")
 
   if [[ "$webp_enabled" == "1" ]]; then
-    printf '%s\n' "--webp"
+    flags+=(--webp)
     if [[ "$webp_mode" == "lossless" ]]; then
-      printf '%s\n' "--lossless"
+      flags+=(--lossless)
     elif [[ -n "$quality" ]]; then
-      printf '%s\n' "--quality $quality"
+      flags+=(--quality "$quality")
     fi
   fi
+
+  printf '%s\n' "${flags[@]}"
 }
 
 # === interactive driver ===
@@ -51,7 +52,7 @@ main() {
   done < <(build_flags "$resize_value" "$webp_enabled" "$webp_mode" "$quality")
 
   echo "Running: imgopt ${flags[*]} ${input_files[*]}"
-  "$IMGOPT" "${flags[@]}" "${input_files[@]}"
+  "$IMGOPT" "${flags[@]+"${flags[@]}"}" "${input_files[@]+"${input_files[@]}"}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

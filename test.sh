@@ -131,14 +131,20 @@ test_tuna_presets_run() {
 }
 
 test_install_script() {
-  local fake_home status
+  local fake_home status target
   fake_home="$(mktemp -d)"
   HOME="$fake_home" bash ./install.sh >/dev/null 2>&1; status=$?
   assert_success "install.sh: exit 0" "$status"
   [[ -L "$fake_home/.local/bin/imgopt" ]] && pass "install.sh: imgopt symlinked" || fail "install.sh: imgopt symlinked"
+  target="$(readlink "$fake_home/.local/bin/imgopt")"
+  [[ -f "$target" ]] && pass "install.sh: imgopt symlink target exists" || fail "install.sh: imgopt symlink target exists"
   [[ -L "$fake_home/.local/bin/imgopt-wizard" ]] && pass "install.sh: imgopt-wizard symlinked" || fail "install.sh: imgopt-wizard symlinked"
+  target="$(readlink "$fake_home/.local/bin/imgopt-wizard")"
+  [[ -f "$target" ]] && pass "install.sh: imgopt-wizard symlink target exists" || fail "install.sh: imgopt-wizard symlink target exists"
   [[ -f "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert copied" || fail "install.sh: webp-convert copied"
+  [[ -x "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert executable" || fail "install.sh: webp-convert executable"
   [[ -f "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 copied" || fail "install.sh: webp-resize-1600 copied"
+  [[ -x "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 executable" || fail "install.sh: webp-resize-1600 executable"
   rm -rf "$fake_home"
 }
 

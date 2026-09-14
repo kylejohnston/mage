@@ -26,6 +26,14 @@ assert_file_exists() {
   [[ -f "$path" ]] && pass "$desc" || fail "$desc (missing: $path)"
 }
 
+assert_line_equals() {
+  local desc="$1" haystack="$2" expected="$3"
+  while IFS= read -r line; do
+    [[ "$line" == "$expected" ]] && { pass "$desc"; return; }
+  done <<< "$haystack"
+  fail "$desc (no line equals '$expected')"
+}
+
 FIXTURE_DIR="$(mktemp -d)"
 trap 'rm -rf "$FIXTURE_DIR"' EXIT
 FIXTURE="$FIXTURE_DIR/photo.png"
@@ -80,10 +88,10 @@ test_wizard_build_flags() {
   local out
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "1600" "1" "lossy" "80")"
   assert_contains "wizard flags: resize" "$out" "--resize"
-  assert_contains "wizard flags: resize value" "$out" "1600"
+  assert_line_equals "wizard flags: resize value is own line" "$out" "1600"
   assert_contains "wizard flags: webp" "$out" "--webp"
   assert_contains "wizard flags: quality" "$out" "--quality"
-  assert_contains "wizard flags: quality value" "$out" "80"
+  assert_line_equals "wizard flags: quality value is own line" "$out" "80"
 
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "" "1" "lossless" "")"
   assert_contains "wizard flags: lossless" "$out" "--lossless"
@@ -91,7 +99,7 @@ test_wizard_build_flags() {
 
   out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "50%" "0" "lossy" "")"
   assert_contains "wizard flags: resize" "$out" "--resize"
-  assert_contains "wizard flags: percent value" "$out" "50%"
+  assert_line_equals "wizard flags: percent value is own line" "$out" "50%"
   [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
 }
 

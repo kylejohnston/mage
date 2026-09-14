@@ -20,7 +20,7 @@ build_flags() {
     fi
   fi
 
-  printf '%s\n' "${flags[@]}"
+  printf '%s\n' "${flags[@]+"${flags[@]}"}"
 }
 
 # === interactive driver ===

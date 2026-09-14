@@ -26,10 +26,14 @@ files=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --resize) resize_value="$2"; shift 2 ;;
+    --resize)
+      [[ $# -ge 2 && "$2" != -* ]] || { echo "$PROG: --resize requires a value" >&2; usage >&2; exit 1; }
+      resize_value="$2"; shift 2 ;;
     --webp) do_webp=1; shift ;;
     --lossless) lossless=1; shift ;;
-    --quality) quality="$2"; shift 2 ;;
+    --quality)
+      [[ $# -ge 2 && "$2" != -* ]] || { echo "$PROG: --quality requires a value" >&2; usage >&2; exit 1; }
+      quality="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --) shift; files+=("$@"); break ;;
     -*) echo "$PROG: unknown flag: $1" >&2; usage >&2; exit 1 ;;

@@ -47,10 +47,28 @@ test_missing_binary_error() {
   assert_contains "missing cwebp: actionable error" "$out" "brew install webp"
 }
 
+test_resize_missing_value() {
+  local out status
+  out="$(./imgopt --resize 2>&1)"; status=$?
+  assert_failure "--resize missing value: nonzero exit" "$status"
+  assert_contains "--resize missing value: error shown" "$out" "Usage:"
+  assert_contains "--resize missing value: no crash" "$out" "--resize requires a value"
+}
+
+test_resize_flag_shaped_value() {
+  local out status
+  out="$(./imgopt --resize --webp file.png 2>&1)"; status=$?
+  assert_failure "--resize flag-shaped value: nonzero exit" "$status"
+  assert_contains "--resize flag-shaped value: error shown" "$out" "Usage:"
+  assert_contains "--resize flag-shaped value: no silent drop" "$out" "--resize requires a value"
+}
+
 # === run all tests ===
 test_no_args_shows_usage_error
 test_help_flag
 test_missing_binary_error
+test_resize_missing_value
+test_resize_flag_shaped_value
 
 echo
 if [[ "$failures" -eq 0 ]]; then

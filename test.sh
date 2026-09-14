@@ -26,6 +26,20 @@ assert_file_exists() {
   [[ -f "$path" ]] && pass "$desc" || fail "$desc (missing: $path)"
 }
 
+FIXTURE_DIR="$(mktemp -d)"
+trap 'rm -rf "$FIXTURE_DIR"' EXIT
+FIXTURE="$FIXTURE_DIR/photo.png"
+magick -size 2000x1000 xc:blue "$FIXTURE"
+
+test_resize_only() {
+  local status width
+  ./imgopt --resize 1600 "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "resize-only: exit 0" "$status"
+  assert_file_exists "resize-only: output created" "$FIXTURE_DIR/photo-1600w.png"
+  width="$(magick identify -format '%w' "$FIXTURE_DIR/photo-1600w.png")"
+  [[ "$width" -eq 1600 ]] && pass "resize-only: width is 1600" || fail "resize-only: width is 1600 (got $width)"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -69,6 +83,7 @@ test_help_flag
 test_missing_binary_error
 test_resize_missing_value
 test_resize_flag_shaped_value
+test_resize_only
 
 echo
 if [[ "$failures" -eq 0 ]]; then

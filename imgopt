@@ -65,5 +65,67 @@ need_bin() {
 [[ "$do_webp" -eq 1 ]] && need_bin cwebp "brew install webp"
 
 # === pipeline ===
+resize_spec() {
+  local value="$1"
+  if [[ "$value" == *% ]]; then
+    printf '%s' "$value"
+  else
+    printf '%sx' "$value"
+  fi
+}
+
+resize_suffix() {
+  local value="$1"
+  if [[ "$value" == *% ]]; then
+    printf '%spct' "${value%\%}"
+  else
+    printf '%sw' "$value"
+  fi
+}
+
+output_path() {
+  local input="$1"
+  local dir base ext stem out_ext suffix
+  dir="$(dirname "$input")"
+  base="$(basename "$input")"
+  ext="${base##*.}"
+  stem="${base%.*}"
+
+  if [[ "$do_webp" -eq 1 ]]; then
+    out_ext="webp"
+  else
+    out_ext="$ext"
+  fi
+
+  if [[ -n "$resize_value" ]]; then
+    suffix="-$(resize_suffix "$resize_value")"
+  else
+    suffix=""
+  fi
+
+  printf '%s/%s%s.%s' "$dir" "$stem" "$suffix" "$out_ext"
+}
+
+process_file() {
+  local input="$1"
+  [[ -f "$input" ]] || { echo "$PROG: $input: no such file" >&2; return 1; }
+
+  local out
+  out="$(output_path "$input")"
+
+  if [[ -n "$resize_value" ]]; then
+    magick "$input" -resize "$(resize_spec "$resize_value")" "$out" || {
+      echo "$PROG: $input: resize failed" >&2
+      return 1
+    }
+  fi
+
+  echo "$input -> $out"
+}
 
 # === main ===
+status=0
+for f in "${files[@]}"; do
+  process_file "$f" || status=1
+done
+exit "$status"

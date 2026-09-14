@@ -117,6 +117,7 @@ test_tuna_presets_run() {
   mkdir -p "$bin_dir"
   ln -sf "$(pwd)/imgopt" "$bin_dir/imgopt"
 
+  rm -f "$FIXTURE_DIR/photo.webp"
   HOME="$fake_home" sh ./tuna/webp-convert.sh "$FIXTURE" >/dev/null 2>&1; status=$?
   assert_success "tuna webp-convert: exit 0" "$status"
   assert_file_exists "tuna webp-convert: output created" "$FIXTURE_DIR/photo.webp"

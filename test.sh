@@ -40,6 +40,23 @@ test_resize_only() {
   [[ "$width" -eq 1600 ]] && pass "resize-only: width is 1600" || fail "resize-only: width is 1600 (got $width)"
 }
 
+test_webp_only() {
+  local status fmt
+  ./imgopt --webp "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "webp-only: exit 0" "$status"
+  assert_file_exists "webp-only: output created" "$FIXTURE_DIR/photo.webp"
+  fmt="$(magick identify -format '%m' "$FIXTURE_DIR/photo.webp")"
+  [[ "$fmt" == "WEBP" ]] && pass "webp-only: format is WEBP" || fail "webp-only: format is WEBP (got $fmt)"
+}
+
+test_webp_lossless_and_quality() {
+  local status
+  ./imgopt --webp --lossless "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "webp lossless: exit 0" "$status"
+  ./imgopt --webp --quality 40 "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "webp quality override: exit 0" "$status"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -84,6 +101,8 @@ test_missing_binary_error
 test_resize_missing_value
 test_resize_flag_shaped_value
 test_resize_only
+test_webp_only
+test_webp_lossless_and_quality
 
 echo
 if [[ "$failures" -eq 0 ]]; then

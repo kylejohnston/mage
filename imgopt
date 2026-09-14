@@ -113,9 +113,16 @@ process_file() {
   local out
   out="$(output_path "$input")"
 
-  if [[ -n "$resize_value" ]]; then
+  if [[ -n "$resize_value" && "$do_webp" -eq 0 ]]; then
     magick "$input" -resize "$(resize_spec "$resize_value")" "$out" || {
       echo "$PROG: $input: resize failed" >&2
+      return 1
+    }
+  elif [[ -z "$resize_value" && "$do_webp" -eq 1 ]]; then
+    local cwebp_args=(-q "$quality")
+    [[ "$lossless" -eq 1 ]] && cwebp_args=(-lossless)
+    cwebp "${cwebp_args[@]}" "$input" -o "$out" >/dev/null 2>&1 || {
+      echo "$PROG: $input: webp conversion failed" >&2
       return 1
     }
   fi

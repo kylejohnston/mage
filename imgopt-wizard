@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMGOPT="$DIR/imgopt"
+
+# === flag building (pure, testable) ===
+build_flags() {
+  local resize_value="$1" webp_enabled="$2" webp_mode="$3" quality="$4"
+
+  if [[ -n "$resize_value" ]]; then
+    printf '%s\n' "--resize $resize_value"
+  fi
+
+  if [[ "$webp_enabled" == "1" ]]; then
+    printf '%s\n' "--webp"
+    if [[ "$webp_mode" == "lossless" ]]; then
+      printf '%s\n' "--lossless"
+    elif [[ -n "$quality" ]]; then
+      printf '%s\n' "--quality $quality"
+    fi
+  fi
+}
+
+# === interactive driver ===
+main() {
+  local -a input_files=("$@")
+  if [[ ${#input_files[@]} -eq 0 ]]; then
+    echo "Enter file paths (space-separated):"
+    # ponytail: naive whitespace split, doesn't handle spaces in paths — pass files as args instead if needed
+    read -r -a input_files
+  fi
+
+  local resize_value="" webp_enabled="0" webp_mode="lossy" quality=""
+
+  if gum confirm "Resize?"; then
+    resize_value="$(gum input --placeholder '1600 or 50%' --prompt 'Resize to: ')"
+  fi
+
+  if gum confirm "Convert to WebP?"; then
+    webp_enabled="1"
+    webp_mode="$(gum choose lossy lossless)"
+    if [[ "$webp_mode" == "lossy" ]]; then
+      quality="$(gum input --placeholder '80' --prompt 'Quality (blank = default 80): ')"
+    fi
+  fi
+
+  local -a flags=()
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && flags+=("$line")
+  done < <(build_flags "$resize_value" "$webp_enabled" "$webp_mode" "$quality")
+
+  echo "Running: imgopt ${flags[*]} ${input_files[*]}"
+  "$IMGOPT" "${flags[@]}" "${input_files[@]}"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

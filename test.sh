@@ -76,6 +76,22 @@ test_multi_file_continues_on_error() {
   assert_file_exists "multi-file: good file still processed" "$FIXTURE_DIR/photo.webp"
 }
 
+test_wizard_build_flags() {
+  local out
+  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "1600" "1" "lossy" "80")"
+  assert_contains "wizard flags: resize" "$out" "--resize"
+  assert_contains "wizard flags: webp" "$out" "--webp"
+  assert_contains "wizard flags: quality" "$out" "--quality"
+
+  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "" "1" "lossless" "")"
+  assert_contains "wizard flags: lossless" "$out" "--lossless"
+  [[ "$out" != *"--resize"* ]] && pass "wizard flags: no resize when unset" || fail "wizard flags: no resize when unset"
+
+  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "50%" "0" "lossy" "")"
+  assert_contains "wizard flags: percent resize" "$out" "--resize 50%"
+  [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -124,6 +140,7 @@ test_webp_only
 test_webp_lossless_and_quality
 test_combined_resize_webp
 test_multi_file_continues_on_error
+test_wizard_build_flags
 
 echo
 if [[ "$failures" -eq 0 ]]; then

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+PROG="$(basename "$0")"
+
+usage() {
+  cat <<'EOF'
+Usage: imgopt [--webp] [--lossless] [--quality N] [--resize VALUE] FILE [FILE...]
+
+  --resize VALUE   Percentage (e.g. 50%) or max width in px (e.g. 1600)
+  --webp           Convert to WebP
+  --lossless       WebP lossless mode (only with --webp)
+  --quality N      Lossy quality 0-100, default 80 (only with --webp, ignored if --lossless)
+  -h, --help       Show this help
+
+At least one of --webp or --resize is required.
+EOF
+}
+
+# === arg parsing ===
+resize_value=""
+do_webp=0
+lossless=0
+quality=80
+files=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --resize) resize_value="$2"; shift 2 ;;
+    --webp) do_webp=1; shift ;;
+    --lossless) lossless=1; shift ;;
+    --quality) quality="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    --) shift; files+=("$@"); break ;;
+    -*) echo "$PROG: unknown flag: $1" >&2; usage >&2; exit 1 ;;
+    *) files+=("$1"); shift ;;
+  esac
+done
+
+if [[ -z "$resize_value" && "$do_webp" -eq 0 ]]; then
+  echo "$PROG: nothing to do — pass --webp and/or --resize" >&2
+  usage >&2
+  exit 1
+fi
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "$PROG: no input files given" >&2
+  usage >&2
+  exit 1
+fi
+
+# === preflight ===
+need_bin() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "$PROG: '$1' not found. Install with: $2" >&2
+    exit 1
+  }
+}
+
+[[ -n "$resize_value" ]] && need_bin magick "brew install imagemagick"
+[[ "$do_webp" -eq 1 ]] && need_bin cwebp "brew install webp"
+
+# === pipeline ===
+
+# === main ===

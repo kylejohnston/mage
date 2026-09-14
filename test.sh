@@ -57,6 +57,25 @@ test_webp_lossless_and_quality() {
   assert_success "webp quality override: exit 0" "$status"
 }
 
+test_combined_resize_webp() {
+  local status fmt width
+  ./imgopt --webp --resize 1600 "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "combined: exit 0" "$status"
+  assert_file_exists "combined: output created" "$FIXTURE_DIR/photo-1600w.webp"
+  fmt="$(magick identify -format '%m' "$FIXTURE_DIR/photo-1600w.webp")"
+  [[ "$fmt" == "WEBP" ]] && pass "combined: format is WEBP" || fail "combined: format is WEBP (got $fmt)"
+  width="$(magick identify -format '%w' "$FIXTURE_DIR/photo-1600w.webp")"
+  [[ "$width" -eq 1600 ]] && pass "combined: width is 1600" || fail "combined: width is 1600 (got $width)"
+}
+
+test_multi_file_continues_on_error() {
+  local out status
+  out="$(./imgopt --webp "$FIXTURE" "$FIXTURE_DIR/missing.png" 2>&1)"; status=$?
+  assert_failure "multi-file: nonzero exit when one file missing" "$status"
+  assert_contains "multi-file: error names missing file" "$out" "no such file"
+  assert_file_exists "multi-file: good file still processed" "$FIXTURE_DIR/photo.webp"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -103,6 +122,8 @@ test_resize_flag_shaped_value
 test_resize_only
 test_webp_only
 test_webp_lossless_and_quality
+test_combined_resize_webp
+test_multi_file_continues_on_error
 
 echo
 if [[ "$failures" -eq 0 ]]; then

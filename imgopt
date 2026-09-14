@@ -113,20 +113,36 @@ process_file() {
   local out
   out="$(output_path "$input")"
 
-  if [[ -n "$resize_value" && "$do_webp" -eq 0 ]]; then
-    magick "$input" -resize "$(resize_spec "$resize_value")" "$out" || {
-      echo "$PROG: $input: resize failed" >&2
+  local work="$input"
+  local tmp_dir=""
+
+  if [[ -n "$resize_value" ]]; then
+    local resize_target="$out"
+    if [[ "$do_webp" -eq 1 ]]; then
+      tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/imgopt.XXXXXX")"
+      resize_target="$tmp_dir/resized.${input##*.}"
+    fi
+    local magick_err
+    if ! magick_err="$(magick "$input" -resize "$(resize_spec "$resize_value")" "$resize_target" 2>&1 1>/dev/null)"; then
+      echo "$PROG: $input: resize failed${magick_err:+: $magick_err}" >&2
+      [[ -n "$tmp_dir" ]] && rm -rf "$tmp_dir"
       return 1
-    }
-  elif [[ -z "$resize_value" && "$do_webp" -eq 1 ]]; then
-    local cwebp_args=(-q "$quality")
-    [[ "$lossless" -eq 1 ]] && cwebp_args=(-lossless)
-    cwebp "${cwebp_args[@]}" "$input" -o "$out" >/dev/null 2>&1 || {
-      echo "$PROG: $input: webp conversion failed" >&2
-      return 1
-    }
+    fi
+    work="$resize_target"
   fi
 
+  if [[ "$do_webp" -eq 1 ]]; then
+    local cwebp_args=(-q "$quality")
+    [[ "$lossless" -eq 1 ]] && cwebp_args=(-lossless)
+    local cwebp_err
+    if ! cwebp_err="$(cwebp "${cwebp_args[@]}" "$work" -o "$out" 2>&1 1>/dev/null)"; then
+      echo "$PROG: $input: webp conversion failed${cwebp_err:+: $cwebp_err}" >&2
+      [[ -n "$tmp_dir" ]] && rm -rf "$tmp_dir"
+      return 1
+    fi
+  fi
+
+  [[ -n "$tmp_dir" ]] && rm -rf "$tmp_dir"
   echo "$input -> $out"
 }
 

@@ -103,6 +103,32 @@ test_wizard_build_flags() {
   [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
 }
 
+test_tuna_headers() {
+  grep -q '@tuna.name' tuna/webp-convert.sh && pass "webp-convert.sh: has @tuna.name" || fail "webp-convert.sh: has @tuna.name"
+  grep -q '@tuna.input arguments' tuna/webp-convert.sh && pass "webp-convert.sh: input arguments" || fail "webp-convert.sh: input arguments"
+  grep -q '@tuna.name' tuna/webp-resize-1600.sh && pass "webp-resize-1600.sh: has @tuna.name" || fail "webp-resize-1600.sh: has @tuna.name"
+  grep -q '@tuna.input arguments' tuna/webp-resize-1600.sh && pass "webp-resize-1600.sh: input arguments" || fail "webp-resize-1600.sh: input arguments"
+}
+
+test_tuna_presets_run() {
+  local fake_home bin_dir status
+  fake_home="$(mktemp -d)"
+  bin_dir="$fake_home/.local/bin"
+  mkdir -p "$bin_dir"
+  ln -sf "$(pwd)/imgopt" "$bin_dir/imgopt"
+
+  HOME="$fake_home" sh ./tuna/webp-convert.sh "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "tuna webp-convert: exit 0" "$status"
+  assert_file_exists "tuna webp-convert: output created" "$FIXTURE_DIR/photo.webp"
+
+  rm -f "$FIXTURE_DIR/photo-1600w.webp"
+  HOME="$fake_home" sh ./tuna/webp-resize-1600.sh "$FIXTURE" >/dev/null 2>&1; status=$?
+  assert_success "tuna webp-resize-1600: exit 0" "$status"
+  assert_file_exists "tuna webp-resize-1600: output created" "$FIXTURE_DIR/photo-1600w.webp"
+
+  rm -rf "$fake_home"
+}
+
 test_no_args_shows_usage_error() {
   local out status
   out="$(./imgopt 2>&1)"; status=$?
@@ -152,6 +178,8 @@ test_webp_lossless_and_quality
 test_combined_resize_webp
 test_multi_file_continues_on_error
 test_wizard_build_flags
+test_tuna_headers
+test_tuna_presets_run
 
 echo
 if [[ "$failures" -eq 0 ]]; then

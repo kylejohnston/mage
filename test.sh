@@ -87,18 +87,18 @@ test_multi_file_continues_on_error() {
 
 test_wizard_build_flags() {
   local out
-  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "1600" "1" "lossy" "80")"
+  out="$(source ./mage >/dev/null 2>&1; build_flags "1600" "1" "lossy" "80")"
   assert_contains "wizard flags: resize" "$out" "--resize"
   assert_line_equals "wizard flags: resize value is own line" "$out" "1600"
   assert_contains "wizard flags: webp" "$out" "--webp"
   assert_contains "wizard flags: quality" "$out" "--quality"
   assert_line_equals "wizard flags: quality value is own line" "$out" "80"
 
-  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "" "1" "lossless" "")"
+  out="$(source ./mage >/dev/null 2>&1; build_flags "" "1" "lossless" "")"
   assert_contains "wizard flags: lossless" "$out" "--lossless"
   [[ "$out" != *"--resize"* ]] && pass "wizard flags: no resize when unset" || fail "wizard flags: no resize when unset"
 
-  out="$(source ./imgopt-wizard >/dev/null 2>&1; build_flags "50%" "0" "lossy" "")"
+  out="$(source ./mage >/dev/null 2>&1; build_flags "50%" "0" "lossy" "")"
   assert_contains "wizard flags: resize" "$out" "--resize"
   assert_line_equals "wizard flags: percent value is own line" "$out" "50%"
   [[ "$out" != *"--webp"* ]] && pass "wizard flags: no webp when disabled" || fail "wizard flags: no webp when disabled"
@@ -117,7 +117,7 @@ esac
 GUMSTUB
   chmod +x "$fake_bin/gum"
 
-  out="$(PATH="$fake_bin:$PATH" ./imgopt-wizard "$FIXTURE" 2>&1)"; status=$?
+  out="$(PATH="$fake_bin:$PATH" ./mage "$FIXTURE" 2>&1)"; status=$?
   [[ "$out" != *"unbound variable"* ]] && pass "wizard main: no crash when declining both" || fail "wizard main: no crash when declining both ($out)"
   assert_contains "wizard main: reaches Running line" "$out" "Running: imgopt"
   assert_failure "wizard main: exits nonzero (nothing to do, not a crash)" "$status"
@@ -160,9 +160,9 @@ test_install_script() {
   [[ -L "$fake_home/.local/bin/imgopt" ]] && pass "install.sh: imgopt symlinked" || fail "install.sh: imgopt symlinked"
   target="$(readlink "$fake_home/.local/bin/imgopt")"
   [[ -f "$target" ]] && pass "install.sh: imgopt symlink target exists" || fail "install.sh: imgopt symlink target exists"
-  [[ -L "$fake_home/.local/bin/imgopt-wizard" ]] && pass "install.sh: imgopt-wizard symlinked" || fail "install.sh: imgopt-wizard symlinked"
-  target="$(readlink "$fake_home/.local/bin/imgopt-wizard")"
-  [[ -f "$target" ]] && pass "install.sh: imgopt-wizard symlink target exists" || fail "install.sh: imgopt-wizard symlink target exists"
+  [[ -L "$fake_home/.local/bin/mage" ]] && pass "install.sh: mage symlinked" || fail "install.sh: mage symlinked"
+  target="$(readlink "$fake_home/.local/bin/mage")"
+  [[ -f "$target" ]] && pass "install.sh: mage symlink target exists" || fail "install.sh: mage symlink target exists"
   [[ -f "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert copied" || fail "install.sh: webp-convert copied"
   [[ -x "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert executable" || fail "install.sh: webp-convert executable"
   [[ -f "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 copied" || fail "install.sh: webp-resize-1600 copied"

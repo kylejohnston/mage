@@ -1,6 +1,6 @@
 # mage 🧙
 
-A small macOS CLI for the two things you actually do to a screenshot: shrink it and convert it to WebP. Built to replace [OptImage](https://optimage.app) with something scriptable.
+A small macOS CLI for the two things you actually do to a screenshot: shrink it and convert it to WebP. Built to replace [OptImage](https://optimage.app) with something that works from the command line.
 
 ![mage: quick defaults demo](demo/mage-quick.gif)
 

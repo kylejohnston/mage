@@ -20,11 +20,11 @@ Set Height 650
 Set Theme "Catppuccin Mocha"
 Set Padding 20
 
-Hide
-Type "cd $(mktemp -d) && clear" Enter
-Type "magick -size 2400x1500 gradient:#4A90D9-#1A2744 demo.png" Enter
-Type "clear" Enter
-Show
+# Hide
+# Type "cd $(mktemp -d) && clear" Enter
+# Type "magick -size 2400x1500 gradient:#4A90D9-#1A2744 demo.png" Enter
+# Type "clear" Enter
+# Show
 
 Sleep 500ms
 Type "mage demo.png"
@@ -32,6 +32,8 @@ Enter
 Sleep 1.5s
 
 # Resize? — default is No, accept it
+Tab
+Sleep 500ms
 Enter
 Sleep 1s
 

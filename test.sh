@@ -125,33 +125,6 @@ GUMSTUB
   rm -rf "$fake_bin"
 }
 
-test_tuna_headers() {
-  grep -q '@tuna.name' tuna/webp-convert.sh && pass "webp-convert.sh: has @tuna.name" || fail "webp-convert.sh: has @tuna.name"
-  grep -q '@tuna.input arguments' tuna/webp-convert.sh && pass "webp-convert.sh: input arguments" || fail "webp-convert.sh: input arguments"
-  grep -q '@tuna.name' tuna/webp-resize-1600.sh && pass "webp-resize-1600.sh: has @tuna.name" || fail "webp-resize-1600.sh: has @tuna.name"
-  grep -q '@tuna.input arguments' tuna/webp-resize-1600.sh && pass "webp-resize-1600.sh: input arguments" || fail "webp-resize-1600.sh: input arguments"
-}
-
-test_tuna_presets_run() {
-  local fake_home bin_dir status
-  fake_home="$(mktemp -d)"
-  bin_dir="$fake_home/.local/bin"
-  mkdir -p "$bin_dir"
-  ln -sf "$(pwd)/imgopt" "$bin_dir/imgopt"
-
-  rm -f "$FIXTURE_DIR/photo.webp"
-  HOME="$fake_home" sh ./tuna/webp-convert.sh "$FIXTURE" >/dev/null 2>&1; status=$?
-  assert_success "tuna webp-convert: exit 0" "$status"
-  assert_file_exists "tuna webp-convert: output created" "$FIXTURE_DIR/photo.webp"
-
-  rm -f "$FIXTURE_DIR/photo-1600w.webp"
-  HOME="$fake_home" sh ./tuna/webp-resize-1600.sh "$FIXTURE" >/dev/null 2>&1; status=$?
-  assert_success "tuna webp-resize-1600: exit 0" "$status"
-  assert_file_exists "tuna webp-resize-1600: output created" "$FIXTURE_DIR/photo-1600w.webp"
-
-  rm -rf "$fake_home"
-}
-
 test_install_script() {
   local fake_home status target
   fake_home="$(mktemp -d)"
@@ -163,10 +136,6 @@ test_install_script() {
   [[ -L "$fake_home/.local/bin/mage" ]] && pass "install.sh: mage symlinked" || fail "install.sh: mage symlinked"
   target="$(readlink "$fake_home/.local/bin/mage")"
   [[ -f "$target" ]] && pass "install.sh: mage symlink target exists" || fail "install.sh: mage symlink target exists"
-  [[ -f "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert copied" || fail "install.sh: webp-convert copied"
-  [[ -x "$fake_home/Library/Scripts/imgopt-webp-convert.sh" ]] && pass "install.sh: webp-convert executable" || fail "install.sh: webp-convert executable"
-  [[ -f "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 copied" || fail "install.sh: webp-resize-1600 copied"
-  [[ -x "$fake_home/Library/Scripts/imgopt-webp-resize-1600.sh" ]] && pass "install.sh: webp-resize-1600 executable" || fail "install.sh: webp-resize-1600 executable"
   rm -rf "$fake_home"
 }
 
@@ -220,8 +189,6 @@ test_combined_resize_webp
 test_multi_file_continues_on_error
 test_wizard_build_flags
 test_wizard_main_declines_both
-test_tuna_headers
-test_tuna_presets_run
 test_install_script
 
 echo

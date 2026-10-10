@@ -40,7 +40,11 @@ main() {
 
   if gum confirm "Convert to WebP?"; then
     webp_enabled="1"
-    webp_mode="$(gum choose lossless lossy)"
+    if gum confirm --default=true --affirmative "Lossless" --negative "Lossy" "Lossless or lossy WebP?"; then
+      webp_mode="lossless"
+    else
+      webp_mode="lossy"
+    fi
     if [[ "$webp_mode" == "lossy" ]]; then
       quality="$(gum input --placeholder '80' --prompt 'Quality (blank = default 80): ')"
     fi

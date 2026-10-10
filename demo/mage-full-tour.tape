@@ -30,7 +30,7 @@ Type "mage demo.png"
 Enter
 Sleep 1.5s
 
-# Resize? — default is No, press Tab to switch to Yes
+# Resize? — default is Yes
 Enter
 Sleep 1s
 
@@ -45,7 +45,7 @@ Enter
 Sleep 1s
 
 # lossless / lossy — default is lossless, move down to lossy
-Down
+Tab
 Sleep 500ms
 Enter
 Sleep 1s

@@ -60,7 +60,7 @@ Want to skip the prompts and call the underlying tool directly — in a script, 
 
 ## Scope
 
-- Input formats: PNG, JPEG, TIFF. HEIC isn't supported.
+- Input formats: PNG, JPEG, TIFF, GIF (animated GIFs keep every frame when converted to WebP). HEIC isn't supported.
 - No same-format re-optimization (re-encoding a JPEG that stays a JPEG) — only resize and/or WebP conversion.
 - No folder recursion — pass files or a shell glob, not a directory.
 

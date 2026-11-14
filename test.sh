@@ -59,8 +59,10 @@ test_webp_only() {
 
 test_webp_lossless_and_quality() {
   local status
+  rm -f "$FIXTURE_DIR/photo.webp"
   ./imgopt --webp --lossless "$FIXTURE" >/dev/null 2>&1; status=$?
   assert_success "webp lossless: exit 0" "$status"
+  rm -f "$FIXTURE_DIR/photo.webp"
   ./imgopt --webp --quality 40 "$FIXTURE" >/dev/null 2>&1; status=$?
   assert_success "webp quality override: exit 0" "$status"
 }
@@ -83,6 +85,41 @@ test_multi_file_continues_on_error() {
   assert_failure "multi-file: nonzero exit when one file missing" "$status"
   assert_contains "multi-file: error names missing file" "$out" "no such file"
   assert_file_exists "multi-file: good file still processed" "$FIXTURE_DIR/photo.webp"
+}
+
+test_gif_webp_keeps_frames() {
+  local status frames gif="$FIXTURE_DIR/anim.gif"
+  magick -size 300x200 xc:red xc:blue -delay 50 "$gif"
+  ./imgopt --webp "$gif" >/dev/null 2>&1; status=$?
+  assert_success "gif webp: exit 0" "$status"
+  assert_file_exists "gif webp: output created" "$FIXTURE_DIR/anim.webp"
+  frames="$(magick identify "$FIXTURE_DIR/anim.webp" | wc -l | tr -d ' ')"
+  [[ "$frames" -eq 2 ]] && pass "gif webp: both frames kept" || fail "gif webp: both frames kept (got $frames)"
+  rm -f "$FIXTURE_DIR/anim.webp"
+  ./imgopt --webp --lossless "$gif" >/dev/null 2>&1; status=$?
+  assert_success "gif webp lossless: exit 0" "$status"
+}
+
+test_webp_input_not_overwritten() {
+  local status out before after src="$FIXTURE_DIR/keep.webp"
+  magick "$FIXTURE" "$src"
+  before="$(cksum < "$src")"
+  out="$(./imgopt --webp "$src" 2>&1)"; status=$?
+  assert_failure "webp input: nonzero exit" "$status"
+  assert_contains "webp input: error explains existing output" "$out" "already exists"
+  after="$(cksum < "$src")"
+  [[ "$before" == "$after" ]] && pass "webp input: original unchanged" || fail "webp input: original unchanged"
+}
+
+test_existing_output_not_overwritten() {
+  local status out before after dst="$FIXTURE_DIR/photo-800w.png"
+  echo keep > "$dst"
+  before="$(cksum < "$dst")"
+  out="$(./imgopt --resize 800 "$FIXTURE" 2>&1)"; status=$?
+  assert_failure "existing output: nonzero exit" "$status"
+  assert_contains "existing output: error explains" "$out" "already exists"
+  after="$(cksum < "$dst")"
+  [[ "$before" == "$after" ]] && pass "existing output: file unchanged" || fail "existing output: file unchanged"
 }
 
 test_wizard_build_flags() {
@@ -187,6 +224,9 @@ test_webp_only
 test_webp_lossless_and_quality
 test_combined_resize_webp
 test_multi_file_continues_on_error
+test_gif_webp_keeps_frames
+test_webp_input_not_overwritten
+test_existing_output_not_overwritten
 test_wizard_build_flags
 test_wizard_main_declines_both
 test_install_script
